@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use strum::IntoEnumIterator;
 
-const MULTILINE_TEMPLATE_NAME: &'static str = "multi_line";
-const SHORT_ADDR_TEMPLATE_NAME: &'static str = "short_addr";
+const MULTILINE_TEMPLATE_NAME: &str = "multi_line";
+const SHORT_ADDR_TEMPLATE_NAME: &str = "short_addr";
 
 /// Represents a Regex and the value to replace the regex matches with
 #[derive(Debug, Clone)]
@@ -79,7 +79,7 @@ pub(crate) struct Template {
 // it's not very elegant, but it works to only find the line with the housenumber
 fn compute_short_addr_template(place_template: &str) -> Option<String> {
     place_template
-        .split("\n")
+        .split('\n')
         .find(|l| l.contains("house_number"))
         .map(|l| l.trim().to_owned())
 }
@@ -247,7 +247,7 @@ impl Formatter {
         let rules = country_code
             .as_ref()
             .and_then(|c| self.templates.rules_by_country.get(c))
-            .unwrap_or_else(|| &self.templates.fallback_rules);
+            .unwrap_or(&self.templates.fallback_rules);
 
         self.preformat(&rules, &mut addr);
 
@@ -361,7 +361,7 @@ impl Formatter {
                     self.templates
                         .fallback_templates_by_country
                         .get(&c)
-                        .or_else(|| Some(&self.templates.fallback_template))
+                        .or(Some(&self.templates.fallback_template))
                 } else {
                     self.templates.templates_by_country.get(&c)
                 }
@@ -438,7 +438,7 @@ impl PlaceBuilder {
         let mut place = Place::default();
         let mut unknown = HashMap::<String, String>::new();
         for (k, v) in values.into_iter() {
-            let component = Component::from_str(k).ok();;
+            let component = Component::from_str(k).ok();
             if let Some(component) = component {
                 place[component] = Some(v);
             } else {
@@ -504,7 +504,6 @@ fn sanity_clean_place(addr: &mut Place) {
 }
 
 fn cleanup_rendered(text: &str, rules: &Rules) -> String {
-    use itertools::Itertools;
     lazy_static::lazy_static! {
         static ref REPLACEMENTS:  [(Regex, &'static str); 12]= [
             (RegexBuilder::new(r"[},\s]+$").multi_line(true).build().unwrap(), ""),

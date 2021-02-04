@@ -81,7 +81,7 @@ pub fn address_builder() {
         ("state", "French Polynesia"),
     ];
 
-    let addr = addr_builder.build_place(data.into_iter().map(|(k, v)| (k.clone(), v.to_string())));
+    let addr = addr_builder.build_place(data.iter().map(|(k, v)| (*k, v.to_string())));
 
     assert_eq!(
         formatter.format(addr).unwrap(),

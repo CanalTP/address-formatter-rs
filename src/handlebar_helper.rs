@@ -14,7 +14,7 @@ impl HelperDef for FirstNonNullHelper {
         r: &'reg Handlebars,
         ctx: &Context,
         rc: &mut RenderContext<'reg>,
-        out: &mut Output,
+        out: &mut dyn Output,
     ) -> HelperResult {
         let tpl = h
             .template()
@@ -26,7 +26,7 @@ impl HelperDef for FirstNonNullHelper {
             .split("||")
             .map(|s| s.trim())
             .find(|v| !v.is_empty())
-            .unwrap_or_else(|| "");
+            .unwrap_or("");
 
         out.write(&value)?;
         Ok(())
