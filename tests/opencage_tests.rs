@@ -1,6 +1,6 @@
 use address_formatter::{Formatter, Place, PlaceBuilder};
 use failure::{format_err, Error};
-use include_dir::{include_dir, include_dir_impl};
+use include_dir::include_dir;
 use yaml_rust::{Yaml, YamlLoader};
 
 #[test]

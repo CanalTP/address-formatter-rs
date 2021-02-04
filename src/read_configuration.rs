@@ -56,10 +56,12 @@ pub fn read_configuration() -> Formatter {
                     })
                     .collect();
 
-                let template = build_template(&v["address_template"]).expect(&format!(
-                    "no address_template found for country {}",
-                    country_code
-                ));
+                let template = build_template(&v["address_template"]).unwrap_or_else(|err| {
+                    panic!(
+                        "Err {}: no address_template found for country {}",
+                        err, country_code
+                    )
+                });
                 let rules = Rules {
                     replace: replace_rules,
                     postformat_replace: post_format_replace_rules,
@@ -94,8 +96,8 @@ pub fn read_configuration() -> Formatter {
 
         let mut new_rules = rules_by_country
             .get(&parent_country_code)
-            .map(|r| r.clone())
-            .unwrap_or_else(|| Rules::default());
+            .cloned()
+            .unwrap_or_else(Rules::default);
         new_rules.change_country_code = Some(parent_country_code.as_str().to_owned());
         new_rules.change_country = template["change_country"].as_str().map(|s| s.to_string());
         new_rules.add_component = add_component;
@@ -161,12 +163,12 @@ pub fn read_place_builder_configuration() -> PlaceBuilder {
     for c in &raw_components {
         if let Some(aliases) = c["aliases"].as_vec() {
             let name = c["name"].as_str().unwrap();
-            let component =
-                Component::from_str(name).expect(&format!("{} is not a valid component", name));
+            let component = Component::from_str(name)
+                .unwrap_or_else(|err| panic!("Err {}: {} is not a valid component", err, name));
             for a in aliases {
                 component_aliases
                     .entry(component)
-                    .or_insert_with(|| vec![])
+                    .or_insert_with(Vec::new)
                     .push(a.as_str().unwrap().to_string());
             }
         }
@@ -197,10 +199,12 @@ fn read_replace(yaml_rules: &yaml_rust::Yaml) -> Vec<ReplaceRule> {
                         // it's a replace on only one component
                         // the rules is written 'component=<string_to_replace'
                         let parts = first_val.split('=').collect::<Vec<_>>();
-                        let component = Component::from_str(parts[0]).expect(&format!(
-                            "in replace '{}' is not a valid component",
-                            parts[0]
-                        ));
+                        let component = Component::from_str(parts[0]).unwrap_or_else(|err| {
+                            panic!(
+                                "Err {}: in replace '{}' is not a valid component",
+                                err, parts[0]
+                            )
+                        });
                         ReplaceRule::Component((
                             component,
                             Replacement {
@@ -230,5 +234,5 @@ fn read_replace(yaml_rules: &yaml_rust::Yaml) -> Vec<ReplaceRule> {
                 })
                 .collect()
         })
-        .unwrap_or_else(|| vec![])
+        .unwrap_or_else(Vec::new)
 }
